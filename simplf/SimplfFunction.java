@@ -1,25 +1,48 @@
 package simplf;
- 
+
 import java.util.List;
 
 class SimplfFunction implements SimplfCallable {
 
+    private final Stmt.Function declaration; // The function’s AST node
+    private Environment closure; // The environment where it was defined
+
     SimplfFunction(Stmt.Function declaration, Environment closure) {
-        throw new UnsupportedOperationException("TODO: implement functions");
+        this.declaration = declaration;
+        this.closure = closure;
     }
 
+    // Optional method (some starter templates provide this)
     public void setClosure(Environment environment) {
-        throw new UnsupportedOperationException("TODO: implement functions");
+        this.closure = environment;
     }
 
     @Override
     public Object call(Interpreter interpreter, List<Object> args) {
-        throw new UnsupportedOperationException("TODO: implement functions");
+        // Create a new environment for the function’s execution,
+        // nested inside the closure where the function was declared
+        Environment environment = new Environment(closure);
+
+        // Bind each parameter name to its corresponding argument value
+        for (int i = 0; i < declaration.params.size(); i++) {
+            environment.define(declaration.params.get(i).lexeme, args.get(i));
+        }
+
+        try {
+            // Execute the body of the function inside this new environment
+            interpreter.executeBlock(declaration.body, environment);
+        } catch (Return returnValue) {
+            // Capture and return the returned value (if `return` is used inside function)
+            return returnValue.value;
+        }
+
+        // If there’s no explicit return, return null (like in Lox/Simplf)
+        return null;
     }
 
     @Override
     public String toString() {
-        return "<fn >";
+        // Show function name if it exists
+        return "<fn " + declaration.name.lexeme + ">";
     }
-
 }

@@ -25,7 +25,7 @@ import simplf.Stmt.While;
 public class Desugar implements Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
 
     public Desugar() {
-        
+
     }
 
     public List<Stmt> desugar(List<Stmt> stmts) {
@@ -54,7 +54,7 @@ public class Desugar implements Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
     @Override
     public Stmt visitBlockStmt(Block stmt) {
         ArrayList<Stmt> new_statements = new ArrayList<>();
-        for(Stmt old_state : stmt.statements) {
+        for (Stmt old_state : stmt.statements) {
             new_statements.add(old_state.accept(this));
         }
         return new Block(new_statements);
@@ -70,19 +70,45 @@ public class Desugar implements Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
         }
 
         return new If(stmt.cond.accept(this),
-            stmt.thenBranch.accept(this),
-            new_else);
+                stmt.thenBranch.accept(this),
+                new_else);
     }
 
     @Override
     public Stmt visitWhileStmt(While stmt) {
         return new While(stmt.cond.accept(this),
-            stmt.body.accept(this));
+                stmt.body.accept(this));
     }
 
     @Override
     public Stmt visitForStmt(For stmt) {
-        throw new UnsupportedOperationException("TODO: desugar for loops");
+        // 1. Desugar each part
+        Stmt initializer = stmt.initializer == null ? null : stmt.initializer.accept(this);
+        Expr condition = stmt.condition == null ? new Literal(true) : stmt.condition.accept(this);
+        Expr increment = stmt.increment == null ? null : stmt.increment.accept(this);
+        Stmt body = stmt.body.accept(this);
+
+        // 2. If there's an increment, append it to the body
+        if (increment != null) {
+            List<Stmt> bodyStmts = new ArrayList<>();
+            bodyStmts.add(body);
+            bodyStmts.add(new Stmt.Expression(increment));
+            body = new Stmt.Block(bodyStmts);
+        }
+
+        // 3. Build the while loop
+        Stmt whileLoop = new Stmt.While(condition, body);
+
+        // 4. Include initializer if present
+        if (initializer != null) {
+            List<Stmt> stmts = new ArrayList<>();
+            stmts.add(initializer);
+            stmts.add(whileLoop);
+            return new Stmt.Block(stmts);
+        }
+
+        // 5. Otherwise, return while loop directly
+        return whileLoop;
     }
 
     @Override
@@ -132,9 +158,9 @@ public class Desugar implements Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
 
     @Override
     public Expr visitConditionalExpr(Conditional expr) {
-        return new Conditional(expr.cond.accept(this), 
-            expr.thenBranch.accept(this),
-            expr.elseBranch.accept(this));
+        return new Conditional(expr.cond.accept(this),
+                expr.thenBranch.accept(this),
+                expr.elseBranch.accept(this));
     }
 
     @Override

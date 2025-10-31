@@ -1,4 +1,4 @@
-package simplf; 
+package simplf;
 
 import java.util.List;
 
@@ -108,16 +108,19 @@ public abstract class Stmt {
     }
 
     public static class For extends Stmt {
-        final Expr init, cond, incr;
-        final Stmt body;
+        public final Stmt initializer;
+        public final Expr condition;
+        public final Expr increment;
+        public final Stmt body;
 
-        public For(Expr init, Expr cond, Expr incr, Stmt body) {
-            this.init = init;
-            this.cond = cond;
-            this.incr = incr;
+        public For(Stmt initializer, Expr condition, Expr increment, Stmt body) {
+            this.initializer = initializer;
+            this.condition = condition;
+            this.increment = increment;
             this.body = body;
         }
 
+        @Override
         <T> T accept(Visitor<T> vis) {
             return vis.visitForStmt(this);
         }
