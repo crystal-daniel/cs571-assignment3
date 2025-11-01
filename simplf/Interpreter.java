@@ -26,7 +26,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
 
     @Override
     public Object visitExprStmt(Stmt.Expression stmt) {
-        throw new UnsupportedOperationException("TODO: implement statements");
+        evaluate(stmt.expr);
+        return null;
     }
 
     @Override
@@ -280,7 +281,38 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
 
     @Override
     public Object visitLambda(Lambda expr) {
-        throw new UnsupportedOperationException("TODO: implement variable references");
+        // Create a callable that captures the current environment (closure)
+        final Environment closure = this.environment;
+        return new SimplfCallable() {
+            @Override
+            public Object call(Interpreter interpreter, List<Object> args) {
+                // New environment nested inside the closure
+                Environment env = new Environment(closure);
+                // Bind parameters
+                for (int i = 0; i < expr.params.size(); i++) {
+                    env.define(expr.params.get(i).lexeme, args.get(i));
+                }
+
+                // Evaluate the lambda body with the new environment, preserving previous
+                Environment previous = Interpreter.this.environment;
+                try {
+                    Interpreter.this.environment = env;
+                    return Interpreter.this.evaluate(expr.body);
+                } finally {
+                    Interpreter.this.environment = previous;
+                }
+            }
+
+            @Override
+            public int arity() {
+                return expr.params.size();
+            }
+
+            @Override
+            public String toString() {
+                return "<lambda>";
+            }
+        };
     }
 
 }

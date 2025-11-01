@@ -17,7 +17,11 @@ class Environment {
     }
 
     void define(String name, Object value) {
-        values.insert(name, value);
+        if (values == null) {
+            values = new AssocList(name, value, null);
+        } else {
+            values = values.insert(name, value);
+        }
     }
 
     // Define a new variable in the current environment
