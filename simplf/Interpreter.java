@@ -65,6 +65,27 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
         }
     }
 
+    // Execute block but return the value of the final expression statement (if
+    // any).
+    Object executeBlockWithReturn(java.util.List<Stmt> statements, Environment newEnv) {
+        Environment previous = this.environment;
+        try {
+            this.environment = newEnv;
+            Object result = null;
+            for (int i = 0; i < statements.size(); i++) {
+                Stmt statement = statements.get(i);
+                if (i == statements.size() - 1 && statement instanceof Stmt.Expression) {
+                    result = evaluate(((Stmt.Expression) statement).expr);
+                } else {
+                    execute(statement);
+                }
+            }
+            return result;
+        } finally {
+            this.environment = previous;
+        }
+    }
+
     @Override
     public Object visitIfStmt(Stmt.If stmt) {
         Object condition = evaluate(stmt.cond);

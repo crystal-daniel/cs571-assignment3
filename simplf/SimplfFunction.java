@@ -29,15 +29,17 @@ class SimplfFunction implements SimplfCallable {
         }
 
         try {
-            // Execute the body of the function inside this new environment
-            interpreter.executeBlock(declaration.body, environment);
+            return interpreter.executeBlockWithReturn(declaration.body, environment);
         } catch (Return returnValue) {
             // Capture and return the returned value (if `return` is used inside function)
             return returnValue.value;
         }
 
-        // If there’s no explicit return, return null (like in Lox/Simplf)
-        return null;
+    }
+
+    @Override
+    public int arity() {
+        return declaration.params.size();
     }
 
     @Override
